@@ -151,7 +151,10 @@ class HomeController extends GetxController {
       }
 
       _hasMoreSponsors =
-          sponsorResponse.pagination.totalItems < sponsorItems.length;
+          _sponsorItems.length < sponsorResponse.pagination.totalItems;
+      print(
+        'Loaded sponsors. Total: ${_sponsorItems.length}, Has more: $_hasMoreSponsors',
+      );
     } catch (e) {
       if (loadMore) {
         _currentSponsorPage--;
@@ -176,7 +179,7 @@ class HomeController extends GetxController {
 
     try {
       await _loadNewsFeeds(loadMore: true);
-      update(['news_list', 'news_loader']); // Update specific parts
+      update(['news_list', 'news_loader']);
       print('News loaded successfully. Total items: ${_newsItems.length}');
     } catch (e) {
       _errorMessage.value = 'Failed to load more news: ${e.toString()}';
@@ -190,7 +193,7 @@ class HomeController extends GetxController {
 
     try {
       await _loadSponsors(loadMore: true);
-      update(['sponsors_load_more']);
+      update(['sponsors_list']);
     } catch (e) {
       _errorMessage.value = 'Failed to load more sponsors: ${e.toString()}';
       Get.snackbar('Error', 'Failed to load more sponsors');
@@ -221,185 +224,19 @@ class HomeController extends GetxController {
       loadMoreNews();
     }
   }
-}
-/*
-class HomeController extends GetxController {
-  final ApiService _apiService = Get.find<ApiService>();
 
-  // UI State
-  final RxInt selectedTab = 0.obs;
-  final RxInt currentCarouselIndex = 0.obs;
+  // Method to handle horizontal scroll for sponsors
+  void handleSponsorsScroll(ScrollMetrics metrics) {
+    final maxScroll = metrics.maxScrollExtent;
+    final currentScroll = metrics.pixels;
+    final threshold = maxScroll * 0.7;
 
-  // Data
-  final List<NewsFeed> _newsItems = [];
-  final List<Carousel> _carouselItems = [];
-  final List<Sponsor> _sponsorItems = [];
-  final List<AppHeaderLogo> _headerLogos = [];
-
-  // Pagination States
-  final RxBool _isLoading = false.obs;
-  final RxBool _isLoadingMoreNews = false.obs;
-  final RxBool _isLoadingMoreSponsors = false.obs;
-  final RxString _errorMessage = ''.obs;
-
-  int _currentNewsPage = 1;
-  int _currentSponsorPage = 1;
-  bool _hasMoreNews = true;
-  bool _hasMoreSponsors = true;
-
-  // Getters for data (immutable access)
-  List<NewsFeed> get newsItems => List.unmodifiable(_newsItems);
-  List<Carousel> get carouselItems => List.unmodifiable(_carouselItems);
-  List<Sponsor> get sponsorItems => List.unmodifiable(_sponsorItems);
-  List<AppHeaderLogo> get headerLogos => List.unmodifiable(_headerLogos);
-
-  // Getters for state
-  bool get isLoading => _isLoading.value;
-  bool get isLoadingMoreNews => _isLoadingMoreNews.value;
-  bool get isLoadingMoreSponsors => _isLoadingMoreSponsors.value;
-  bool get hasMoreNews => _hasMoreNews;
-  bool get hasMoreSponsors => _hasMoreSponsors;
-  String get errorMessage => _errorMessage.value;
-
-  @override
-  void onInit() {
-    super.onInit();
-    loadInitialData();
-  }
-
-  Future<void> loadInitialData() async {
-    _isLoading.value = true;
-    _errorMessage.value = '';
-
-    // Clear existing data
-    _newsItems.clear();
-    _carouselItems.clear();
-    _sponsorItems.clear();
-    _headerLogos.clear();
-
-    _currentNewsPage = 1;
-    _currentSponsorPage = 1;
-    _hasMoreNews = true;
-    _hasMoreSponsors = true;
-
-    try {
-      await Future.wait([_loadNewsFeeds(), _loadCarousels(), _loadSponsors()]);
-      update(); // Notify GetBuilder to rebuild
-    } catch (e) {
-      _errorMessage.value = e.toString();
-      Get.snackbar('Error', e.toString());
-    } finally {
-      _isLoading.value = false;
-      update(); // Notify GetBuilder to rebuild
-    }
-  }
-
-  Future<void> _loadNewsFeeds({bool loadMore = false}) async {
-    if (loadMore && (!_hasMoreNews || _isLoadingMoreNews.value)) return;
-
-    if (loadMore) {
-      _isLoadingMoreNews.value = true;
-      _currentNewsPage++;
-    }
-
-    try {
-      final newsResponse = await _apiService.getNewsFeeds(
-        page: _currentNewsPage,
-      );
-
-      if (loadMore) {
-        _newsItems.addAll(newsResponse.data);
-      } else {
-        _newsItems.clear();
-        _newsItems.addAll(newsResponse.data);
-      }
-
-      _hasMoreNews = newsResponse.pagination.hasNext;
-    } catch (e) {
-      if (loadMore) {
-        _currentNewsPage--;
-      }
-      rethrow;
-    } finally {
-      if (loadMore) {
-        _isLoadingMoreNews.value = false;
-      }
-    }
-  }
-
-  Future<void> _loadCarousels() async {
-    try {
-      final carouselResponse = await _apiService.getCarousels();
-      _carouselItems.clear();
-      _carouselItems.addAll(carouselResponse.data);
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Future<void> _loadSponsors({bool loadMore = false}) async {
-    if (loadMore && (!_hasMoreSponsors || _isLoadingMoreSponsors.value)) return;
-
-    if (loadMore) {
-      _isLoadingMoreSponsors.value = true;
-      _currentSponsorPage++;
-    }
-
-    try {
-      final sponsorResponse = await _apiService.getSponsors(
-        page: loadMore ? _currentSponsorPage : 1,
-      );
-
-      if (loadMore) {
-        _sponsorItems.addAll(sponsorResponse.data);
-      } else {
-        _sponsorItems.clear();
-        _sponsorItems.addAll(sponsorResponse.data);
-      }
-
-      _hasMoreSponsors = sponsorResponse.pagination.hasNext;
-    } catch (e) {
-      if (loadMore) {
-        _currentSponsorPage--;
-      }
-      rethrow;
-    } finally {
-      if (loadMore) {
-        _isLoadingMoreSponsors.value = false;
-      }
-    }
-  }
-
-  Future<void> loadMoreNews() async {
-    if (!_hasMoreNews || _isLoadingMoreNews.value) return;
-
-    await _loadNewsFeeds(loadMore: true);
-    update(); // Notify GetBuilder to rebuild
-  }
-
-  Future<void> loadMoreSponsors() async {
-    if (!_hasMoreSponsors || _isLoadingMoreSponsors.value) return;
-
-    await _loadSponsors(loadMore: true);
-    update(); // Notify GetBuilder to rebuild
-  }
-
-  void changeTab(int index) {
-    selectedTab.value = index;
-  }
-
-  void onCarouselChanged(int index) {
-    currentCarouselIndex.value = index;
-  }
-
-  // Method to check if we should load more news when scrolling
-  void onNewsScroll(double scrollPosition, double maxScrollExtent) {
-    // Load more when user scrolls to 80% of the current list
-    if (scrollPosition >= maxScrollExtent * 0.8 &&
-        _hasMoreNews &&
-        !_isLoadingMoreNews.value) {
-      loadMoreNews();
+    if (currentScroll >= threshold &&
+        _hasMoreSponsors &&
+        !_isLoadingMoreSponsors.value &&
+        !_isLoading.value) {
+      print('Sponsors scroll threshold reached. Loading more sponsors...');
+      loadMoreSponsors();
     }
   }
 }
-*/
