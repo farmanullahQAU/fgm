@@ -1,3 +1,5 @@
+import 'package:fmac/models/user.dart';
+
 class Result {
   final String? id;
   final String title;
@@ -5,7 +7,7 @@ class Result {
   final DateTime date;
   final String time;
   final String pdfUrl;
-  final String createdBy;
+  final User createdBy; // Changed to User object
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -16,7 +18,7 @@ class Result {
     required this.date,
     required this.time,
     required this.pdfUrl,
-    required this.createdBy,
+    required this.createdBy, // Now accepts User object
     this.createdAt,
     this.updatedAt,
   });
@@ -29,7 +31,9 @@ class Result {
       date: DateTime.parse(json['date'] as String),
       time: json['time'] as String,
       pdfUrl: json['pdfUrl'] as String,
-      createdBy: json['createdBy'] as String,
+      createdBy: User.fromJson(
+        json['createdBy'] as Map<String, dynamic>,
+      ), // Parse as User object
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
@@ -47,7 +51,7 @@ class Result {
       'date': date.toIso8601String(),
       'time': time,
       'pdfUrl': pdfUrl,
-      'createdBy': createdBy,
+      'createdBy': createdBy.toJson(), // Serialize User object
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };

@@ -6,7 +6,7 @@ class AppTheme {
   static ThemeData lightTheme() {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Inter', // Or any font you use
+      fontFamily: 'HKGrotesk', // Or any font you use
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.branding,
         primary: AppColors.branding,
@@ -14,7 +14,7 @@ class AppTheme {
         // tertiary: AppColors.tertiary,
         brightness: Brightness.light,
       ),
-      textTheme: GoogleFonts.interTightTextTheme(Typography.blackMountainView),
+      // textTheme: GoogleFonts.interTightTextTheme(Typography.blackMountainView),
     );
   }
 

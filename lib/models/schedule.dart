@@ -1,3 +1,5 @@
+import 'package:fmac/models/user.dart';
+
 class Schedule {
   final String? id;
   final String title;
@@ -5,7 +7,7 @@ class Schedule {
   final DateTime date;
   final String time;
   final String googleMapLink;
-  final String createdBy;
+  final User createdBy; // Changed from String to User
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -29,7 +31,9 @@ class Schedule {
       date: DateTime.parse(json['date'] as String),
       time: json['time'] as String,
       googleMapLink: json['googleMapLink'] as String,
-      createdBy: json['createdBy'] as String,
+      createdBy: User.fromJson(
+        json['createdBy'] as Map<String, dynamic>,
+      ), // Parse createdBy as User
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
@@ -47,7 +51,7 @@ class Schedule {
       'date': date.toIso8601String(),
       'time': time,
       'googleMapLink': googleMapLink,
-      'createdBy': createdBy,
+      'createdBy': createdBy.toJson(), // Serialize createdBy as User JSON
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };

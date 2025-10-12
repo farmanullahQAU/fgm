@@ -43,6 +43,11 @@ class HomeController extends GetxController {
   bool get hasMoreNews => _hasMoreNews;
   bool get hasMoreSponsors => _hasMoreSponsors;
   String get errorMessage => _errorMessage.value;
+  final RxBool _isLoadingSchedules = false.obs;
+  final RxString _scheduleErrorMessage = ''.obs;
+
+  // Getter for state
+  String get scheduleErrorMessage => _scheduleErrorMessage.value;
 
   @override
   void onInit() {
@@ -53,6 +58,7 @@ class HomeController extends GetxController {
   Future<void> loadInitialData() async {
     _isLoading.value = true;
     _errorMessage.value = '';
+    _scheduleErrorMessage.value = ''; // Clear schedule error
 
     // Clear existing data
     _newsItems.clear();
@@ -69,6 +75,7 @@ class HomeController extends GetxController {
       await Future.wait([_loadNewsFeeds(), _loadCarousels(), _loadSponsors()]);
     } catch (e) {
       _errorMessage.value = e.toString();
+      _scheduleErrorMessage.value = e.toString();
       Get.snackbar('Error', e.toString());
     } finally {
       _isLoading.value = false;
@@ -202,7 +209,7 @@ class HomeController extends GetxController {
 
   void changeTab(int index) {
     selectedTab.value = index;
-    update(['bottom_nav']);
+    update(['bottom_nav']); // Update only bottom navigation
   }
 
   void onCarouselChanged(int index) {

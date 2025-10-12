@@ -49,7 +49,7 @@ class Pagination {
 }
 
 class ApiService extends GetConnect {
-  static const String _baseUrl = 'http://10.136.90.162:5000/api';
+  static const String _baseUrl = 'http://10.128.193.162:5000/api';
 
   String? _authToken;
 
@@ -76,11 +76,13 @@ class ApiService extends GetConnect {
   }
 
   // ================= USER APIs =================
-  Future<PaginatedResponse<User>> getUsers({int page = 1}) async {
-    final response = await get(
-      '/users?page=$page',
-    ); //how to add another parameter
-
+  Future<PaginatedResponse<User>> getUsers({int page = 1, String? role}) async {
+    // Build query parameters
+    final query = {'page': page.toString()};
+    if (role != null) {
+      query['role'] = role;
+    }
+    final response = await get('/users', query: query); // Pass query parameters
     if (response.status.hasError) {
       throw Exception(
         'Failed to fetch users: ${response.body['message'] ?? response.statusText}',
@@ -234,9 +236,12 @@ class ApiService extends GetConnect {
         'Failed to fetch schedules: ${response.body['message'] ?? response.statusText}',
       );
     }
-    final data = response.body['data'] as List<dynamic>;
+    final data =
+        response.body['data']['schedules']
+            as List<dynamic>; // Corrected to access 'schedules'
     final pagination = Pagination.fromJson(
-      response.body['pagination'] as Map<String, dynamic>,
+      response.body['data']['pagination']
+          as Map<String, dynamic>, // Corrected to access 'pagination'
     );
     return PaginatedResponse(
       data: data
@@ -264,10 +269,13 @@ class ApiService extends GetConnect {
         'Failed to fetch results: ${response.body['message'] ?? response.statusText}',
       );
     }
-    final data = response.body['data'] as List<dynamic>;
+
+    // Fixed: Access the correct data structure based on your API response
+    final data = response.body['data']['results'] as List<dynamic>;
     final pagination = Pagination.fromJson(
-      response.body['pagination'] as Map<String, dynamic>,
+      response.body['data']['pagination'] as Map<String, dynamic>,
     );
+
     return PaginatedResponse(
       data: data
           .map((json) => Result.fromJson(json as Map<String, dynamic>))
@@ -317,13 +325,12 @@ class ApiService extends GetConnect {
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}'); // Log full body for debugging
     if (response.status.hasError) {
-      final message = response.body['message'] ?? response.statusText;
-      final errors = response.body['errors'] as List<dynamic>?;
-      final errorDetails =
-          errors?.map((e) => '${e['field']}: ${e['message']}').join(', ') ?? '';
-      throw Exception(
-        'Failed to fetch news feeds: $message${errorDetails.isNotEmpty ? ' ($errorDetails)' : ''}',
-      );
+      if (response.statusCode == null) {
+        throw Exception("Please check your internect connection");
+      } else {
+        final message = response.body['message'] ?? response.statusText;
+        throw Exception(message);
+      }
     }
     final data = response.body['data']['newsFeeds'] as List<dynamic>;
     final pagination = Pagination.fromJson(

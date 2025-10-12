@@ -38,6 +38,8 @@ dependencies:
   google_fonts: ^6.3.2
   svg_flutter: ^0.0.1
   shimmer: ^3.0.0
+  intl: ^0.20.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +67,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/fonts/hk-grotesk/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -77,17 +80,43 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
+  fonts:
+    - family: HKGrotesk
+      fonts:
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Black.otf
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Bold.otf
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Light.otf
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Light.otf
+          weight: 300
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Regular.otf
+          weight: 400
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Medium.otf
+          weight: 500
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Bold.otf
+          weight: 700
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-ExtraBold.otf
+          weight: 800
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Black.otf
+          weight: 900
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-Italic.otf
+          style: italic
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-LightItalic.otf
+          weight: 300
+          style: italic
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-MediumItalic.otf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/hk-grotesk/HKGrotesk-BoldItalic.otf
+          weight: 700
+          style: italic
+
+  #   - family: 
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-  #
+  # #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

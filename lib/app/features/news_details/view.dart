@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fmac/core/values/app_colors.dart';
 import 'package:fmac/models/news_feed.dart';
+import 'package:fmac/widgets/back_button.dart';
 import 'package:get/get.dart';
 
 class NewsDetailsScreen extends StatelessWidget {
@@ -11,28 +12,22 @@ class NewsDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Theme.of(context).cardColor,
       body: CustomScrollView(
         slivers: [
           // App Bar with Back Button
           SliverAppBar(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             elevation: 0,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_rounded,
-                color: Theme.of(context).iconTheme.color,
-              ),
-              onPressed: () => Get.back(),
-            ),
+            leading: BackButtonIos(),
             actions: [
-              IconButton(
-                icon: Icon(
-                  Icons.share,
-                  color: Theme.of(context).iconTheme.color,
-                ),
-                onPressed: _shareNews,
-              ),
+              // IconButton(
+              //   icon: Icon(
+              //     Icons.share,
+              //     color: Theme.of(context).iconTheme.color,
+              //   ),
+              //   onPressed: _shareNews,
+              // ),
             ],
             pinned: true,
             expandedHeight: 250,
@@ -43,37 +38,45 @@ class NewsDetailsScreen extends StatelessWidget {
 
           // News Content
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // News Title
-                  Text(
-                    newsItem.title,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      height: 1.3,
+            child: Container(
+              decoration: BoxDecoration(
+                // borderRadius: BorderRadius.only(topLeft: Radius.circular(16)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // News Title
+                    Text(
+                      newsItem.title,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  Text(
-                    _formatDate(newsItem.createdAt!),
-                    style: Get.textTheme.bodySmall?.copyWith(
-                      color: Get.theme.hintColor,
-                      fontStyle: FontStyle.italic,
+                    Text(
+                      _formatDate(newsItem.createdAt!),
+                      style: Get.textTheme.bodySmall?.copyWith(
+                        color: Get.theme.hintColor,
+                        fontWeight: FontWeight.w400,
+
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // News Meta Information
-                  // _buildNewsMeta(context),
-
-                  // News Content
-                  _buildNewsContent(context),
-                ],
+                    Text(
+                      newsItem.description,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        // height: 1.6,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -152,9 +155,10 @@ class NewsDetailsScreen extends StatelessWidget {
             children: [
               Text(
                 createdByName,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
@@ -176,21 +180,6 @@ class NewsDetailsScreen extends StatelessWidget {
           onPressed: _toggleBookmark,
         ),
       ],
-    );
-  }
-
-  Widget _buildNewsContent(BuildContext context) {
-    // This would be the actual content from your news item
-    // For now, using placeholder text as shown in your screenshot
-
-    return Text(
-      newsItem.description,
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        fontSize: 16,
-        height: 1.6,
-        letterSpacing: 0.2,
-      ),
-      textAlign: TextAlign.justify,
     );
   }
 
