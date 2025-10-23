@@ -8,13 +8,15 @@
 // import '../../../core/values/app_colors.dart';
 // import 'controller.dart';
 import 'package:flutter/material.dart';
+import 'package:fmac/app/features/events/view.dart';
 import 'package:fmac/app/features/login/login_screen.dart';
 import 'package:fmac/app/features/news_details/view.dart';
+import 'package:fmac/app/features/profile/view.dart';
 import 'package:fmac/app/features/results/view.dart';
 import 'package:fmac/app/features/schedule/view.dart';
+import 'package:fmac/app/features/youtube_videos/watch_screen.dart';
 import 'package:fmac/core/values/app_constants.dart';
 import 'package:fmac/models/news_feed.dart';
-import 'package:fmac/services/auth_service.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:svg_flutter/svg.dart';
@@ -26,8 +28,8 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
+  @override
   Widget build(BuildContext context) {
-    print(Get.find<AuthService>().accessToken);
     return GetBuilder<HomeController>(
       id: 'bottom_nav',
       init: HomeController(),
@@ -35,16 +37,36 @@ class HomeScreen extends StatelessWidget {
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return Scaffold(
-          floatingActionButton: const NotificationButton(),
+          // Add Drawer
+          drawer: const ProfileDrawer(),
+
+          // Update FloatingActionButton to open drawer
+          floatingActionButton: NotificationButton(),
+
+          // Update AppBar to include menu button
+          appBar: AppBar(
+            // title: const Text('FMAC'),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+            actions: [],
+          ),
+
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: IndexedStack(
             index: controller.selectedTab.value,
             children: [
-              Obx(() => _buildContent(context, controller)), // Home content
-              SchedulePage(), // Schedule page
-              ResultsPage(), // Placeholder for Results (to be implemented)
-              Container(), // Placeholder for Watch (to be implemented)
-              Container(), // Placeholder for Live (to be implemented)
+              Obx(() => _buildContent(context, controller)),
+              SchedulePage(),
+              ResultsPage(),
+              WatchScreen(),
+
+              Container(),
             ],
           ),
           bottomNavigationBar: _buildBottomNavBar(controller, isDark),
@@ -284,7 +306,7 @@ class HomeScreen extends StatelessWidget {
       //     bottom: BorderSide(width: 0.1, color: AppColors.darkTextSecondary),
       //   ),
       // ),
-      padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -294,7 +316,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               _buildLogo(context, 'wt_logo.png', 70),
               Icon(
-                Icons.menu,
+                Icons.more_vert,
                 color: Theme.of(context).iconTheme.color,
                 size: 24,
               ),
@@ -318,53 +340,63 @@ class HomeScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = Get.theme.colorScheme.outlineVariant;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
+    return InkWell(
+      onTap: () {
+        Get.to(() => EventsPage());
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.grey.withValues(alpha: 0.1),
+              offset: Offset(0, 4),
+              spreadRadius: 2,
+              blurRadius: 4,
+            ),
+          ],
+          border: Border(top: BorderSide(width: 0.5, color: borderColor)),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.grey.withValues(alpha: 0.1),
-            offset: Offset(0, 4),
-            spreadRadius: 2,
-            blurRadius: 4,
-          ),
-        ],
-        border: Border(top: BorderSide(width: 0.5, color: borderColor)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildActionButton(context, 'group.svg', 'All Athletes', borderColor),
-          _buildActionButton(
-            context,
-            'weight.svg',
-            'Weight Divisions',
-            borderColor,
-          ),
-          _buildActionButton(
-            context,
-            'random_weight.svg',
-            'Random Weigh in',
-            borderColor,
-          ),
-          _buildActionButton(
-            context,
-            'draw_list.svg',
-            'Draw List',
-            borderColor,
-          ),
-          _buildActionButton(
-            context,
-            'move_match.svg',
-            'Moved Matches',
-            borderColor,
-          ),
-        ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildActionButton(
+              context,
+              'group.svg',
+              'All Athletes',
+              borderColor,
+            ),
+            _buildActionButton(
+              context,
+              'weight.svg',
+              'Weight Divisions',
+              borderColor,
+            ),
+            _buildActionButton(
+              context,
+              'random_weight.svg',
+              'Random Weigh in',
+              borderColor,
+            ),
+            _buildActionButton(
+              context,
+              'draw_list.svg',
+              'Draw List',
+              borderColor,
+            ),
+            _buildActionButton(
+              context,
+              'move_match.svg',
+              'Moved Matches',
+              borderColor,
+            ),
+          ],
+        ),
       ),
     );
   }

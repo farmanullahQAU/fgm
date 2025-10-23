@@ -1,62 +1,114 @@
 import 'package:flutter/material.dart';
-import 'package:fmac/app/features/login/controller.dart';
-import 'package:fmac/app/routes/app_routes.dart';
+import 'package:fmac/app/features/register/controller.dart';
 import 'package:fmac/services/auth_service.dart';
 import 'package:get/get.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(LoginController());
+    final controller = Get.put(RegisterController()); // Initialize controller
     final authService = Get.find<AuthService>();
 
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Get.back(),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE31E24).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.lock_outline,
-                    size: 48,
-                    color: Color(0xFFE31E24),
-                  ),
-                ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
                 const Text(
-                  'Welcome Back',
+                  'Create Account',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
-                  'Sign in to continue to your account',
+                  'Sign up to get started',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 32),
+                TextField(
+                  controller: controller.firstNameController,
+                  decoration: InputDecoration(
+                    labelText: 'First Name',
+                    hintText: 'John',
+                    prefixIcon: const Icon(Icons.person_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE31E24),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                  ),
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller.lastNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Last Name',
+                    hintText: 'Doe',
+                    prefixIcon: const Icon(Icons.person_outline),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE31E24),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                  ),
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: controller.emailController,
                   decoration: InputDecoration(
                     labelText: 'Email Address',
-                    hintText: 'Enter your email',
+                    hintText: 'user@example.com',
                     prefixIcon: const Icon(Icons.email_outlined),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -81,14 +133,14 @@ class LoginScreen extends StatelessWidget {
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Obx(
                   () => TextField(
                     controller: controller.passwordController,
                     obscureText: !controller.isPasswordVisible.value,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      hintText: 'Enter your password',
+                      hintText: 'At least 8 characters',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -119,25 +171,39 @@ class LoginScreen extends StatelessWidget {
                         vertical: 16,
                       ),
                     ),
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => controller.login(),
+                    textInputAction: TextInputAction.next,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      // TODO: Implement forgot password navigation
-                    },
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller.phoneController,
+                  decoration: InputDecoration(
+                    labelText: 'Phone (Optional)',
+                    hintText: '+92 300 1234567',
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
                         color: Color(0xFFE31E24),
-                        fontWeight: FontWeight.w600,
+                        width: 2,
                       ),
                     ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                   ),
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => controller.register(),
                 ),
                 const SizedBox(height: 32),
                 Obx(
@@ -147,7 +213,7 @@ class LoginScreen extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: authService.isLoading.value
                           ? null
-                          : controller.login,
+                          : controller.register,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFE31E24),
                         disabledBackgroundColor: Colors.grey[400],
@@ -168,7 +234,7 @@ class LoginScreen extends StatelessWidget {
                               ),
                             )
                           : const Text(
-                              'Sign In',
+                              'Create Account',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -179,27 +245,17 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                const SizedBox(height: 16),
+                Center(
+                  child: Text(
+                    'By signing up, you agree to our Terms & Conditions',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w400,
                     ),
-                    TextButton(
-                      onPressed: () => Get.toNamed(AppRoutes.register),
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: Color(0xFFE31E24),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),

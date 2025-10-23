@@ -33,10 +33,6 @@ class SchedulePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.iconTheme.color),
-          onPressed: () => Get.back(),
-        ),
         title: Text(
           'Schedule',
           style: TextStyle(
