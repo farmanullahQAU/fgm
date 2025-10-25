@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fmac/app/routes/app_routes.dart';
 import 'package:fmac/core/values/app_colors.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -89,6 +90,14 @@ class ProfileDrawer extends StatelessWidget {
                   onTap: () {
                     Get.back(); // Close drawer
                     // TODO: Navigate to profile settings screen
+                  },
+                ),
+                _buildDrawerItem(
+                  icon: Icons.groups_outlined,
+                  title: 'Teams & Athletes',
+                  onTap: () {
+                    Get.back();
+                    Get.toNamed(AppRoutes.teams);
                   },
                 ),
                 _buildDrawerItem(

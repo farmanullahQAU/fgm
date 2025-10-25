@@ -7,6 +7,8 @@ import 'package:fmac/models/news_feed.dart';
 import 'package:fmac/models/result.dart';
 import 'package:fmac/models/schedule.dart';
 import 'package:fmac/models/sponsor.dart';
+import 'package:fmac/models/team.dart';
+import 'package:fmac/models/team_details.dart' hide Event;
 import 'package:fmac/models/ticket.dart';
 import 'package:fmac/models/user.dart';
 import 'package:fmac/models/vidoes.dart';
@@ -466,5 +468,43 @@ class ApiService extends GetConnect {
     });
     await _handleResponse(response, 'create payment intent');
     return response.body['data']['clientSecret'];
+  }
+
+  // TEAMS AND ATHLETES APIs
+  Future<PaginatedResponse<Team>> getTeams({int page = 1}) async {
+    final response = await get('/club/teams-athletes?page=$page');
+    await _handleResponse(response, 'fetch teams and athletes');
+    final data = response.body['data']['teams'] as List<dynamic>;
+    final pagination = Pagination.fromJson(response.body['pagination']);
+    return PaginatedResponse(
+      data: data.map((json) => Team.fromJson(json)).toList(),
+      pagination: pagination,
+    );
+  }
+
+  Future<PaginatedResponse<TeamDetails>> getTeamDetails(String teamId) async {
+    final response = await get('/club/teams/$teamId/athletes');
+    await _handleResponse(response, 'fetch team details');
+    final data = response.body['data'] as Map<String, dynamic>;
+    final pagination = Pagination.fromJson(
+      response.body['pagination'] as Map<String, dynamic>,
+    );
+    final teamDetails = TeamDetails.fromJson(data);
+    return PaginatedResponse(data: [teamDetails], pagination: pagination);
+  }
+
+  Future<PaginatedResponse<Official>> getTeamOfficials(
+    String organizationId,
+  ) async {
+    final response = await get('/club/teams/$organizationId/officials');
+    await _handleResponse(response, 'fetch team officials');
+    final data = response.body['data']['officials'] as List<dynamic>;
+    final pagination = Pagination.fromJson(
+      response.body['pagination'] as Map<String, dynamic>,
+    );
+    return PaginatedResponse(
+      data: data.map((json) => Official.fromJson(json)).toList(),
+      pagination: pagination,
+    );
   }
 }

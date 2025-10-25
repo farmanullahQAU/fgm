@@ -340,7 +340,7 @@ class TicketController extends GetxController {
     currentStep.value = 0;
     actualTickets.clear();
     selectedDay.value = availableDays.isNotEmpty ? availableDays[0] : null;
-    final eventId = Get.arguments as String? ?? '507f1f77bcf86cd799439011';
+    final eventId = Get.arguments;
     _loadEventData(eventId);
   }
 
@@ -439,10 +439,7 @@ class AddTicketScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Color(0xFF2D2D2D),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.back(),
-        ),
+
         title: Text(
           'Tickets',
           style: TextStyle(color: Colors.white, fontSize: 18),
