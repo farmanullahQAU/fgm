@@ -101,6 +101,22 @@ class ProfileDrawer extends StatelessWidget {
                   },
                 ),
                 _buildDrawerItem(
+                  icon: Icons.groups_outlined,
+                  title: 'Weight Divisions',
+                  onTap: () {
+                    Get.back();
+                    Get.toNamed(AppRoutes.weightDivisions);
+                  },
+                ),
+                _buildDrawerItem(
+                  icon: Icons.confirmation_number_outlined,
+                  title: 'My Tickets',
+                  onTap: () {
+                    Get.back();
+                    Get.toNamed(AppRoutes.myTickets);
+                  },
+                ),
+                _buildDrawerItem(
                   icon: Icons.settings_outlined,
                   title: 'Settings',
                   onTap: () {

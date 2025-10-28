@@ -8,6 +8,7 @@
 // import '../../../core/values/app_colors.dart';
 // import 'controller.dart';
 import 'package:flutter/material.dart';
+import 'package:fmac/app/features/courts/view.dart';
 import 'package:fmac/app/features/events/view.dart';
 import 'package:fmac/app/features/login/login_screen.dart';
 import 'package:fmac/app/features/news_details/view.dart';
@@ -15,6 +16,7 @@ import 'package:fmac/app/features/profile/view.dart';
 import 'package:fmac/app/features/results/view.dart';
 import 'package:fmac/app/features/schedule/view.dart';
 import 'package:fmac/app/features/youtube_videos/watch_screen.dart';
+import 'package:fmac/app/routes/app_routes.dart';
 import 'package:fmac/core/values/app_constants.dart';
 import 'package:fmac/models/news_feed.dart';
 import 'package:get/get.dart';
@@ -66,7 +68,7 @@ class HomeScreen extends StatelessWidget {
               ResultsPage(),
               WatchScreen(),
 
-              Container(),
+              CourtsView(),
             ],
           ),
           bottomNavigationBar: _buildBottomNavBar(controller, isDark),
@@ -337,7 +339,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = Get.theme.colorScheme.outlineVariant;
 
     return InkWell(
@@ -370,30 +371,37 @@ class HomeScreen extends StatelessWidget {
               'group.svg',
               'All Athletes',
               borderColor,
+              onTap: () => Get.toNamed(AppRoutes.teams),
             ),
             _buildActionButton(
               context,
               'weight.svg',
               'Weight Divisions',
               borderColor,
+              onTap: () => Get.toNamed(AppRoutes.weightDivisions),
             ),
             _buildActionButton(
               context,
               'random_weight.svg',
               'Random Weigh in',
               borderColor,
+              onTap: () => Get.toNamed(AppRoutes.randomWeighIn),
             ),
             _buildActionButton(
               context,
               'draw_list.svg',
               'Draw List',
               borderColor,
+              onTap: () => Get.toNamed(AppRoutes.drawList),
             ),
             _buildActionButton(
               context,
               'move_match.svg',
               'Moved Matches',
               borderColor,
+              onTap: () {
+                Get.toNamed(AppRoutes.movedMatches);
+              },
             ),
           ],
         ),
@@ -405,27 +413,31 @@ class HomeScreen extends StatelessWidget {
     BuildContext context,
     String iconPath,
     String label,
-    Color borderColor,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        SvgPicture.asset('$iconsBasePath$iconPath', width: 22),
-        const SizedBox(height: 6),
-        SizedBox(
-          width: 64,
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Get.theme.textTheme.labelMedium?.copyWith(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
+    Color borderColor, {
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          SvgPicture.asset('$iconsBasePath$iconPath', width: 22),
+          const SizedBox(height: 6),
+          SizedBox(
+            width: 64,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Get.theme.textTheme.labelMedium?.copyWith(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
             ),
-            maxLines: 2,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

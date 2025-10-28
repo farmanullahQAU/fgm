@@ -171,11 +171,17 @@ class TicketController extends GetxController {
       // createdBy: currentEvent.value!.createdBy,
     );
     try {
+      _logger.i('Creating ticket for event: ${currentEvent.value!.id}');
+      _logger.i(
+        'Ticket data: type=${ticket.ticketType}, count=${ticket.numberOfTickets}, dates=${ticket.selectedDates.length}',
+      );
       await apiService.createTicket(ticket, currentEvent.value!.id);
+      _logger.i('Ticket created, refreshing tickets list...');
       await _refreshTickets(); // Refresh tickets after adding
+      _logger.i('Refreshed tickets, count: ${actualTickets.length}');
       Get.snackbar('Success', 'Ticket added successfully');
     } catch (e) {
-      print("Error creating ticket: $e");
+      _logger.e("Error creating ticket: $e");
       Get.snackbar('Error', 'Failed to create ticket: $e');
     }
   }
@@ -344,32 +350,72 @@ class TicketController extends GetxController {
     _loadEventData(eventId);
   }
 
-  // ==================== TICKET CONTROLLER - confirmPayment (FIX) ====================
-  Future<void> confirmPayment(String clientSecret) async {
+  // ==================== TICKET CONTROLLER - confirmPayment (PROFESSIONAL & SMOOTH) ====================
+  Future<void> confirmPayment(
+    String clientSecret, {
+    required CardEditController cardController,
+  }) async {
     try {
       isSubmitting.value = true;
 
-      // Confirm payment with Stripe
-      final paymentIntent = await Get.find<StripeService>()
-          .confirmPaymentWithCardForm(clientSecret);
+      // Step 1: Confirm payment with Stripe
+      _logger.i('Step 1: Confirming payment with Stripe...');
+      final paymentIntent = await Get.find<StripeService>().confirmPayment(
+        clientSecret,
+        cardController: cardController,
+      );
+
+      _logger.i('Payment intent status: ${paymentIntent.status}');
 
       // Check if payment succeeded
       if (paymentIntent.status == PaymentIntentsStatus.Succeeded) {
-        // Update tickets status to paid
-        // await _updateTicketsStatus('paid');
+        _logger.i('Stripe payment succeeded. Confirming with backend...');
 
-        // Sync ticket details to backend
-        // await saveTicketToBackend();
+        // Step 2: Confirm payment on backend to get ticket details
+        final confirmation = await apiService.confirmPayment(paymentIntent.id);
+
+        _logger.i(
+          'Backend confirmation received. Tickets count: ${confirmation.tickets.length}',
+        );
+
+        // Update local tickets with confirmed data
+        if (confirmation.tickets.isNotEmpty) {
+          // Update tickets with confirmed information
+          for (
+            var i = 0;
+            i < actualTickets.length && i < confirmation.tickets.length;
+            i++
+          ) {
+            final confirmedTicket = confirmation.tickets[i];
+            actualTickets[i] = actualTickets[i].copyWith(
+              id: confirmedTicket.id,
+              status: 'confirmed',
+              bookingReference: confirmedTicket.ticketNumber,
+            );
+          }
+        }
 
         // Navigate to success screen
         currentStep.value = 3;
-        Get.snackbar('Success', 'Payment completed successfully!');
+        Get.snackbar(
+          'Success',
+          'Payment completed successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
       } else {
         throw Exception('Payment failed: ${paymentIntent.status}');
       }
     } catch (e) {
       _logger.e('Payment confirmation error: $e');
-      Get.snackbar('Error', 'Payment failed: $e');
+      Get.snackbar(
+        'Payment Error',
+        'Payment failed: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     } finally {
       isSubmitting.value = false;
     }
@@ -1183,7 +1229,8 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   final TicketController controller = Get.find();
   final Logger _logger = Logger();
-  final CardFormEditController _cardController = CardFormEditController();
+
+  final CardEditController _cardController = CardEditController();
 
   @override
   void dispose() {
@@ -1197,8 +1244,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
 
-    // Validate card form is complete
-    if (!_cardController.hasCardFormField) {
+    // Validate card field is complete
+    if (!_cardController.details.complete) {
       Get.snackbar('Error', 'Please enter complete card details');
       return;
     }
@@ -1206,14 +1253,37 @@ class _PaymentScreenState extends State<PaymentScreen> {
     try {
       controller.isSubmitting.value = true;
 
-      // Create PaymentIntent on backend
-      final clientSecret = await Get.find<ApiService>().createPaymentIntent(
-        ticketId: controller.actualTickets.first.id,
-      );
-      _logger.i('Received clientSecret: $clientSecret');
+      // Filter out tickets without IDs and collect valid IDs
+      final ticketIds = controller.actualTickets
+          .where((ticket) => ticket.id != null)
+          .map((ticket) => ticket.id!)
+          .toList();
 
-      // Confirm payment - CardFormField handles the card data automatically
-      await controller.confirmPayment(clientSecret);
+      if (ticketIds.isEmpty) {
+        _logger.e('No valid tickets with IDs found. Ticket details:');
+        for (var ticket in controller.actualTickets) {
+          _logger.e(
+            '  - Ticket: ${ticket.ticketType}, ID: ${ticket.id}, Booking Ref: ${ticket.bookingReference}',
+          );
+        }
+        throw Exception(
+          'No valid tickets with IDs found. Please refresh and try again.',
+        );
+      }
+
+      _logger.i('Creating payment intent with ${ticketIds.length} tickets');
+
+      // Create PaymentIntent on backend
+      final paymentIntent = await Get.find<ApiService>().createPaymentIntent(
+        ticketIds,
+      );
+      _logger.i('Received clientSecret: ${paymentIntent.clientSecret}');
+
+      // Confirm payment with Stripe card field
+      await controller.confirmPayment(
+        paymentIntent.clientSecret,
+        cardController: _cardController,
+      );
     } catch (e) {
       _logger.e('Payment error: $e');
       Get.snackbar('Error', 'Payment failed: $e');
@@ -1314,21 +1384,67 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Professional Header
+        Row(
+          children: [
+            Icon(Icons.credit_card, color: Color(0xFFE31E24), size: 24),
+            SizedBox(width: 12),
+            Text(
+              'Payment',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+        SizedBox(height: 4),
         Text(
-          'Card Details',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          'Enter your payment details',
+          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+        ),
+        SizedBox(height: 24),
+
+        // Stripe CardField - Professional and Smooth
+        Container(
+          padding: EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: CardField(
+            controller: _cardController,
+            cursorColor: Color(0xFFE31E24),
+          ),
         ),
         SizedBox(height: 16),
-        CardFormField(
-          controller: _cardController,
-          enablePostalCode: false,
 
-          style: CardFormStyle(
-            // backgroundColor: AppColors.black,
-            borderColor: Colors.grey[300]!,
-
-            // textColor: Colors.black,
-            // placeholderColor: Colors.grey,
+        // Security Note
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.shield, color: Colors.blue[700], size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Your payment information is encrypted and secure',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue[800],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -1375,9 +1491,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
           Obx(
             () => ElevatedButton(
-              onPressed:
-                  controller.isSubmitting.value ||
-                      !_cardController.hasCardFormField
+              onPressed: controller.isSubmitting.value
                   ? null
                   : _handleConfirmPayment,
               style: ElevatedButton.styleFrom(
@@ -2058,67 +2172,389 @@ class SuccessScreen extends StatelessWidget {
         children: [
           _buildStepIndicator(4),
           Expanded(
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.check, color: Colors.white, size: 50),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Obx(() {
+                    if (controller.actualTickets.isEmpty) {
+                      return Center(child: Text('No tickets available'));
+                    }
+
+                    return Column(
+                      children: controller.actualTickets.map((ticket) {
+                        return _buildTicketCard(ticket, controller);
+                      }).toList(),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTicketCard(Ticket ticket, TicketController controller) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          // Event Header with Logo
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+            child: Column(
+              children: [
+                // Event Logo Placeholder
+                Icon(
+                  Icons.sports_martial_arts,
+                  size: 50,
+                  color: Color(0xFFE31E24),
+                ),
+                SizedBox(height: 16),
+                Obx(
+                  () => Text(
+                    controller.eventName.value.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                      color: Colors.black87,
                     ),
-                    SizedBox(height: 24),
-                    Text(
-                      'Your tickets have been successfully purchased.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Container(width: 200, height: 2, color: Color(0xFFE31E24)),
+                SizedBox(height: 8),
+                Text(
+                  'FUJAIRAH 2025',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Dashed Divider
+          _buildDashedDivider(),
+
+          // Attendee Name
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+            child: Column(
+              children: [
+                Text(
+                  '${ticket.firstName ?? ''} ${ticket.lastName ?? ''}'.trim(),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '${controller.eventName.value} - Day 1',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black54,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+
+          _buildDashedDivider(),
+
+          // Two Column Layout
+          Padding(
+            padding: EdgeInsets.all(24),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Column - Text Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailRow(
+                        'Ticket Type',
+                        ticket.ticketType ?? 'Adult',
+                      ),
+                      SizedBox(height: 16),
+                      _buildDetailRow(
+                        'Ticket Number',
+                        ticket.bookingReference.isNotEmpty
+                            ? ticket.bookingReference
+                            : 'N/A',
+                      ),
+                      SizedBox(height: 16),
+                      _buildDetailRow('Seat Number', 'C83'),
+                      SizedBox(height: 16),
+                      _buildDetailRow('Venue', ticket.venue ?? 'N/A'),
+                      SizedBox(height: 16),
+                      _buildDetailRow('Country', 'United Arab Emirates'),
+                      SizedBox(height: 16),
+                      _buildDetailRow('NOC / Continent', 'UAE'),
+                    ],
+                  ),
+                ),
+
+                SizedBox(width: 24),
+
+                // Right Column - Date, Time, QR
+                Column(
+                  children: [
+                    // Date Badge
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFE31E24),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '02nd Jan, 2025',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(height: 12),
-                    Text(
-                      'You can download book of your pass anytime from your on',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.black54),
-                    ),
-                    Text(
-                      '+XXX-XXXXXXXXX',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.black54),
-                    ),
-                    SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () => controller.downloadTickets(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFE31E24),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 48,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
+
+                    // Time Badge
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
-                      child: Text(
-                        'Download Tickets',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFE31E24),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '14:30 PST',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 24),
+
+                    // QR Code
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!, width: 2),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.qr_code,
+                          size: 80,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+
+          // Our Sponsors Section
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Our Sponsors',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Sponsor Logos
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'FMAC',
+                      style: TextStyle(
+                        color: Color(0xFFE31E24),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(width: 24),
+                    Text(
+                      'MAREG',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(width: 24),
+                    Text(
+                      'WORLD TAEKWONDO',
+                      style: TextStyle(
+                        color: Color(0xFFE31E24),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Download Button
+          Container(
+            width: double.infinity,
+            margin: EdgeInsets.all(24),
+            child: ElevatedButton(
+              onPressed: () => controller.downloadTickets(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFE31E24),
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Download Ticket',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDashedDivider() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Row(
+          children: List.generate(
+            (constraints.constrainWidth() / 10).floor(),
+            (index) => Expanded(
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 1),
+                height: 1,
+                color: Colors.grey[300],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.black54,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTicketDetail(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.black54,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 
