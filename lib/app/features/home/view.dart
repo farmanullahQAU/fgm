@@ -339,16 +339,13 @@ class HomeScreen extends StatelessWidget {
           ),
           SliverToBoxAdapter(
             child: Column(
-              children: [
-                const SizedBox(height: 20),
-                _buildSponsorsSection(context, controller),
-              ],
+              children: [_buildSponsorsSection(context, controller)],
             ),
           ),
           SliverToBoxAdapter(
             child: Container(
               color: Theme.of(context).cardColor,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -359,7 +356,7 @@ class HomeScreen extends StatelessWidget {
                       fontSize: 15,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -556,7 +553,7 @@ class HomeScreen extends StatelessWidget {
   ) {
     return Container(
       color: Theme.of(context).cardColor,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -590,6 +587,7 @@ class HomeScreen extends StatelessWidget {
                     return false;
                   },
                   child: ListView.builder(
+                    padding: EdgeInsets.zero,
                     scrollDirection: Axis.horizontal,
                     itemCount:
                         controller.sponsorItems.length +
@@ -661,8 +659,8 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 56,
-            height: 56,
+            width: 80,
+            height: 50,
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
             child: item.image != null && item.image!.isNotEmpty
                 ? Image.network(
