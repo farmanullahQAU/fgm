@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fmac/app/features/weight_divisions/controller.dart';
 import 'package:fmac/models/weight_division_participant.dart';
+import 'package:fmac/widgets/back_button.dart';
 import 'package:get/get.dart';
 
 class WeightDivisionsView extends StatelessWidget {
@@ -28,10 +29,7 @@ class WeightDivisionsView extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Get.back(),
-        ),
+        leading: const BackButtonWidget(),
       ),
       body: Column(
         children: [
@@ -283,10 +281,11 @@ class WeightDivisionsView extends StatelessWidget {
 
   Widget _buildTableHeader() {
     return Container(
-      height: 36,
-      color: Colors.black,
+      height: 40,
+      color: Colors.grey.shade100,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _buildSortableHeader('ID', 'id'),
           _buildSortableHeader('WT', 'wt'),
@@ -302,134 +301,130 @@ class WeightDivisionsView extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: () => controller.onSort(column),
-        child: Row(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-                height: 1.0,
+        child: Container(
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  height: 1.0,
+                ),
               ),
-            ),
-            const SizedBox(width: 3),
-            const Icon(Icons.unfold_more, color: Colors.white, size: 14),
-          ],
+              const SizedBox(width: 4),
+              const Icon(Icons.unfold_more, color: Colors.black87, size: 14),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildParticipantCard(WeightDivisionParticipant participant) {
-    // Get match history
-    final matchHistory = participant.matchHistory;
-
     // Get event info
     final eventInfo = participant.event;
 
+    final countryCode = controller.getCountryCode(participant);
+    final countryName = controller.getCountryName(participant);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // First Row: Profile, Name, Country, Rank
+          // Top Row - Profile, Name, Flag, Country, Rank
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Profile Image
+              // Profile Image - larger
               CircleAvatar(
-                radius: 15,
+                radius: 28,
                 backgroundColor: Colors.grey.shade200,
-                child: const Icon(Icons.person, color: Colors.grey),
+                backgroundImage: participant.profilePicture != null
+                    ? NetworkImage(participant.profilePicture!)
+                    : null,
+                child: participant.profilePicture == null
+                    ? const Icon(Icons.person, color: Colors.grey, size: 32)
+                    : null,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
 
               // Participant Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Name - prominent
+                    Text(
+                      participant.attributes.printName.isNotEmpty
+                          ? participant.attributes.printName
+                          : '...',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: Colors.black,
+                        height: 1.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Flag, Country, Rank row
                     Row(
                       children: [
-                        Flexible(
-                          fit: FlexFit.tight,
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              participant.attributes.printName.isNotEmpty
-                                  ? participant.attributes.printName
-                                  : '...',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                overflow: TextOverflow.ellipsis,
-                                fontSize: 16,
-                                height: 1.2,
-                              ),
-                            ),
+                        if (controller.getCountryFlag(participant).isNotEmpty)
+                          Text(
+                            controller.getCountryFlag(participant),
+                            style: const TextStyle(fontSize: 14),
                           ),
-                        ),
-                        SizedBox(width: 8),
+                        if (controller.getCountryFlag(participant).isNotEmpty)
+                          const SizedBox(width: 6),
                         Text(
-                          participant.attributes.country.isNotEmpty
-                              ? controller.getCountryFlag(
-                                  participant.attributes.country,
-                                )
-                              : '🏳️',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          participant.attributes.country.isNotEmpty
-                              ? '001 | ${participant.attributes.country} | ${controller.getCountryName(participant.attributes.country)}'
+                          countryCode.isNotEmpty && countryName.isNotEmpty
+                              ? '001 | $countryCode | $countryName'
                               : '001 | ... | ...',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
                             fontSize: 12,
+                            color: Colors.grey.shade700,
                             height: 1.2,
                           ),
                         ),
-
-                        Flexible(
-                          fit: FlexFit.tight,
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Rank: ${participant.rank.toString().padLeft(2, '0')}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.0,
-                                ),
-                              ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Rank: ${participant.rank.toString().padLeft(2, '0')}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              height: 1.0,
                             ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    // Organization Name
+
+                    // Organization name
                     Text(
                       participant.organizationName?.isNotEmpty == true
                           ? participant.organizationName!
@@ -443,80 +438,57 @@ class WeightDivisionsView extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    // Details Row
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 1,
-                        ),
-                      ),
 
-                      child: Row(
-                        children: [
+                    // Details row
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          participant.seed.toString().padLeft(4, '0'),
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 11,
+                            height: 1.2,
+                          ),
+                        ),
+                        Text(
+                          participant.participantId.isNotEmpty
+                              ? participant.participantId
+                              : '...',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 11,
+                            height: 1.2,
+                          ),
+                        ),
+                        if (eventInfo.division?.isNotEmpty == true)
                           Text(
-                            participant.participantId.isNotEmpty
-                                ? participant.participantId
-                                : '...',
+                            eventInfo.division!,
                             style: TextStyle(
-                              color: Colors.grey.shade500,
+                              color: Colors.grey.shade600,
                               fontSize: 11,
                               height: 1.2,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                        if (eventInfo.name?.isNotEmpty == true)
                           Text(
-                            participant.attributes.licenseNumber.isNotEmpty
-                                ? participant.attributes.licenseNumber
-                                : '...',
+                            eventInfo.name!,
                             style: TextStyle(
-                              color: Colors.grey.shade500,
+                              color: Colors.grey.shade600,
                               fontSize: 11,
                               height: 1.2,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            eventInfo.division?.isNotEmpty == true
-                                ? eventInfo.division!
-                                : '...',
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 11,
-                              height: 1.2,
-                            ),
+                        Text(
+                          'Seed: ${participant.seed.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 11,
+                            height: 1.2,
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            eventInfo.name?.isNotEmpty == true
-                                ? eventInfo.name!
-                                : '...',
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 11,
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: Text(
-                              'Seed: ${participant.seed.toString().padLeft(2, '0')}',
-                              style: TextStyle(
-                                color: Colors.grey.shade500,
-                                overflow: TextOverflow.ellipsis,
-                                fontSize: 11,
-                                height: 1.2,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -527,82 +499,112 @@ class WeightDivisionsView extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Match Progression Tags
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: _buildMatchProgressionTags(matchHistory),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _buildMatchProgressionTags(participant),
           ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildMatchProgressionTags(List<MatchHistory> matchHistory) {
-    List<Widget> tags = [];
+  List<Widget> _buildMatchProgressionTags(
+    WeightDivisionParticipant participant,
+  ) {
+    const fullRoundOrder = [
+      'R256',
+      'R128',
+      'R64',
+      'R32',
+      'R16',
+      'QF',
+      'SF',
+      'F',
+    ];
 
-    // Always show 8 boxes to match the design
-    final rounds = ['R256', 'R128', 'R64', 'R32', 'R16', 'QF', 'SF', 'F'];
-
-    for (final round in rounds) {
-      // Check if this round exists in match history
-      final matches = matchHistory
-          .where((match) => match.phase == round)
-          .toList();
-
-      List<Widget> tagChildren = [];
-
-      if (matches.isNotEmpty) {
-        // Show real data if available
-        final match = matches.first;
-        tagChildren.add(
-          Text(
-            '${match.phase}: ${match.score}',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              height: 1.0,
-            ),
-          ),
-        );
-
-        // Add medal icons based on actual match results
-        if (match.isWinner == true) {
-          if (match.phase == 'SF') {
-            tagChildren.add(const Text('🥉', style: TextStyle(fontSize: 9)));
-          } else if (match.phase == 'F') {
-            tagChildren.add(const Text('🥈', style: TextStyle(fontSize: 9)));
-            tagChildren.add(const Text('🥇', style: TextStyle(fontSize: 9)));
-          }
-        }
-      } else {
-        // Show empty box with dots if no data
-        tagChildren.add(
-          Text(
-            '...',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              height: 1.0,
-            ),
-          ),
-        );
-      }
-
-      tags.add(
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.shade300, width: 1),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: tagChildren),
-        ),
-      );
+    final progressionMap = <String, dynamic>{};
+    for (final p in participant.matchProgression) {
+      final key = p.phase.toString().toUpperCase().trim();
+      if (key.isNotEmpty) progressionMap[key] = p;
     }
 
-    return tags;
+    // Count how many phases have data
+    final itemsWithData = fullRoundOrder
+        .where((phase) => progressionMap.containsKey(phase))
+        .length;
+    final shouldUseFullWidth = itemsWithData <= 4;
+
+    final boxes = fullRoundOrder.map((phase) {
+      final data = progressionMap[phase];
+      final matchNumber = (data != null && data.number != null)
+          ? data.number.toString()
+          : '--';
+
+      // Medal logic — follows WT rules exactly
+      String? medal;
+      if (phase == 'F') {
+        if (data?.isWinner == true)
+          medal = '🥇';
+        else if (data?.isWinner == false)
+          medal = '🥈';
+      } else if (phase == 'SF' && data?.isWinner == false) {
+        medal = '🥉';
+      }
+
+      return Container(
+        width: shouldUseFullWidth ? null : 80,
+        height: 20,
+        margin: const EdgeInsets.only(right: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+        constraints: shouldUseFullWidth
+            ? const BoxConstraints(minWidth: 0, maxWidth: double.infinity)
+            : const BoxConstraints(minWidth: 80, maxWidth: 80),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '$phase: $matchNumber',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: data == null ? Colors.grey.shade600 : Colors.black87,
+              ),
+            ),
+            if (medal != null)
+              Text(medal, style: const TextStyle(fontSize: 10)),
+          ],
+        ),
+      );
+    }).toList();
+
+    // Group into rows of 4 boxes each, but make full width if 4 or fewer items have data
+    final rows = <Widget>[];
+    if (shouldUseFullWidth) {
+      // If 4 or fewer items have data, make all boxes take full width
+      rows.add(
+        Row(
+          children: boxes.map((box) {
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 2),
+                child: box,
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    } else {
+      // More than 4 items have data, show 4 per row with fixed width
+      for (int i = 0; i < boxes.length; i += 4) {
+        rows.add(Row(children: boxes.skip(i).take(4).toList()));
+        if (i + 4 < boxes.length) rows.add(const SizedBox(height: 5));
+      }
+    }
+
+    return rows;
   }
 }

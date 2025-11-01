@@ -555,11 +555,11 @@ class ApiService extends GetConnect {
   Future<PaginatedResponse<TeamDetails>> getTeamDetails(String teamId) async {
     final response = await get('/club/teams/$teamId/athletes');
     await _handleResponse(response, 'fetch team details');
-    final data = response.body['data'] as Map<String, dynamic>;
     final pagination = Pagination.fromJson(
       response.body['pagination'] as Map<String, dynamic>,
     );
-    final teamDetails = TeamDetails.fromJson(data);
+    // Response structure: { data: { athletes: [...] } }
+    final teamDetails = TeamDetails.fromApiResponse(response.body);
     return PaginatedResponse(data: [teamDetails], pagination: pagination);
   }
 

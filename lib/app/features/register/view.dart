@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fmac/app/features/register/controller.dart';
 import 'package:fmac/services/auth_service.dart';
+import 'package:fmac/widgets/back_button.dart';
 import 'package:get/get.dart';
 
 class RegisterScreen extends StatelessWidget {
@@ -15,10 +16,7 @@ class RegisterScreen extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Get.back(),
-        ),
+        leading: const BackButtonWidget(),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

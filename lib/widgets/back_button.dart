@@ -2,48 +2,53 @@ import 'package:flutter/material.dart';
 import 'package:fmac/core/values/app_colors.dart';
 import 'package:get/get.dart';
 
-class BackButtonIos extends StatelessWidget {
+/// Reusable back button widget matching the exact design from UI
+/// Simple left-pointing arrow icon positioned on the far left
+class BackButtonWidget extends StatelessWidget {
   final VoidCallback? onPressed;
   final Color? color;
   final double size;
-  final EdgeInsetsGeometry? padding;
 
-  const BackButtonIos({
+  const BackButtonWidget({
     super.key,
     this.onPressed,
     this.color,
-    this.size = 24,
-    this.padding,
+    this.size = 16,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Get.theme.brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final buttonColor =
-        color ?? (isDark ? AppColors.darkIconColor : AppColors.lightIconColor);
+        color ??
+        (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary);
 
-    return Center(
-      child: Container(
-        child: Padding(
-          padding: padding ?? const EdgeInsets.only(left: 8),
-          child: InkWell(
-            onTap: onPressed ?? () => Get.back(),
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Get.theme.colorScheme.surfaceContainer,
-
-                shape: BoxShape.circle,
-              ),
-
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              child: Icon(Icons.chevron_left, size: size, color: buttonColor),
-            ),
-          ),
+    return SizedBox(
+      width: 24,
+      height: 24,
+      child: IconButton(
+        style: IconButton.styleFrom(
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          minimumSize: Size.zero,
+          iconSize: size,
         ),
+        icon: Icon(Icons.arrow_back_ios, size: size, color: buttonColor),
+        onPressed: onPressed ?? () => Get.back(),
       ),
     );
   }
+}
+
+/// Legacy class name for backward compatibility
+@Deprecated('Use BackButtonWidget instead')
+class BackButtonIos extends BackButtonWidget {
+  const BackButtonIos({
+    super.key,
+    super.onPressed,
+    super.color,
+    super.size = 24,
+  });
 }

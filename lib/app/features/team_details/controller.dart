@@ -111,50 +111,36 @@ class TeamDetailsController extends GetxController {
     }
   }
 
-  String getCountryFlag(String countryCode) {
-    final countryFlags = {
-      'UAE': '🇦🇪',
-      'KSA': '🇸🇦',
-      'MAR': '🇲🇦',
-      'BRN': '🇧🇭',
-      'JOR': '🇯🇴',
-      'KUW': '🇰🇼',
-      'CHA': '🇹🇩',
-      'EGY': '🇪🇬',
-      'IRQ': '🇮🇶',
-      'LBN': '🇱🇧',
-      'LBY': '🇱🇾',
-      'OMN': '🇴🇲',
-      'PSE': '🇵🇸',
-      'QAT': '🇶🇦',
-      'SYR': '🇸🇾',
-      'TUN': '🇹🇳',
-      'YEM': '🇾🇪',
-    };
-    return countryFlags[countryCode] ?? '🏳️';
+  String getCountryFlag(Athlete athlete) {
+    final flagEmoji = athlete.getFlagEmoji();
+    if (flagEmoji.isNotEmpty) {
+      return flagEmoji;
+    }
+    return '';
   }
 
-  String getCountryName(String countryCode) {
-    final countryNames = {
-      'UAE': 'United Arab Emirates',
-      'KSA': 'Saudi Arabia',
-      'MAR': 'Morocco',
-      'BRN': 'Bahrain',
-      'JOR': 'Jordan',
-      'KUW': 'Kuwait',
-      'CHA': 'Chad',
-      'EGY': 'Egypt',
-      'IRQ': 'Iraq',
-      'LBN': 'Lebanon',
-      'LBY': 'Libya',
-      'OMN': 'Oman',
-      'PSE': 'Palestine',
-      'QAT': 'Qatar',
-      'SYR': 'Syria',
-      'TUN': 'Tunisia',
-      'YEM': 'Yemen',
-    };
-    return countryNames[countryCode] ?? countryCode;
+  String getCountryName(Athlete athlete) {
+    final countryName = athlete.getCountryName();
+    if (countryName.isNotEmpty) {
+      return countryName;
+    }
+    return '';
+  }
+
+  String getCountryCode(Athlete athlete) {
+    return athlete.getCountryCode();
+  }
+
+  String getContinent(Athlete athlete) {
+    final continent = athlete.getContinent();
+    if (continent.isNotEmpty) {
+      // Format continent: "ASIA" -> "Asia", "EUROPE" -> "Europe", etc.
+      if (continent.length > 1) {
+        return continent[0] + continent.substring(1).toLowerCase();
+      }
+      return continent;
+    }
+    return '';
   }
 
   String getMedalIcon(String medalType) {

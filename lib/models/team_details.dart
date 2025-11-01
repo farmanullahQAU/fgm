@@ -1,3 +1,5 @@
+import 'package:fmac/models/team.dart' show Country;
+
 class Athlete {
   final String? id;
   final String athleteId;
@@ -5,10 +7,11 @@ class Athlete {
   final List<MatchProgression> matchProgression;
   final List<MatchHistory> matchHistory;
   final int totalWins;
-  final Map<String, dynamic> country;
+  final Country? country;
   final int rank;
   final int seed;
   final String organizationName;
+  final String? profilePicture;
 
   Athlete({
     this.id,
@@ -17,10 +20,11 @@ class Athlete {
     required this.matchProgression,
     required this.matchHistory,
     required this.totalWins,
-    required this.country,
+    this.country,
     required this.rank,
     required this.seed,
     required this.organizationName,
+    this.profilePicture,
   });
 
   factory Athlete.fromJson(Map<String, dynamic> json) {
@@ -40,11 +44,16 @@ class Athlete {
               ?.map((e) => MatchHistory.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      totalWins: json['totalWins'] as int,
-      country: json['country'] as Map<String, dynamic>? ?? {},
-      rank: json['rank'] as int,
-      seed: json['seed'] as int,
-      organizationName: json['organizationName'] as String,
+      totalWins: json['totalWins'] as int? ?? 0,
+      country:
+          json['country'] != null &&
+              (json['country'] as Map<String, dynamic>).isNotEmpty
+          ? Country.fromJson(json['country'] as Map<String, dynamic>)
+          : null,
+      rank: json['rank'] as int? ?? 0,
+      seed: json['seed'] as int? ?? 0,
+      organizationName: json['organizationName'] as String? ?? '',
+      profilePicture: json['profilePicture'] as String?,
     );
   }
 
@@ -56,11 +65,44 @@ class Athlete {
       'matchProgression': matchProgression.map((e) => e.toJson()).toList(),
       'matchHistory': matchHistory.map((e) => e.toJson()).toList(),
       'totalWins': totalWins,
-      'country': country,
+      if (country != null) 'country': country!.toJson(),
       'rank': rank,
       'seed': seed,
       'organizationName': organizationName,
+      if (profilePicture != null) 'profilePicture': profilePicture,
     };
+  }
+
+  // Helper methods to get country info
+  String getCountryCode() {
+    if (country?.code != null && country!.code!.isNotEmpty) {
+      return country!.code!;
+    }
+    if (attributes.country.isNotEmpty) {
+      return attributes.country;
+    }
+    return '';
+  }
+
+  String getCountryName() {
+    if (country?.name != null && country!.name!.isNotEmpty) {
+      return country!.name!;
+    }
+    return '';
+  }
+
+  String getContinent() {
+    if (country?.continent != null && country!.continent!.isNotEmpty) {
+      return country!.continent!;
+    }
+    return '';
+  }
+
+  String getFlagEmoji() {
+    if (country?.flagEmoji != null && country!.flagEmoji!.isNotEmpty) {
+      return country!.flagEmoji!;
+    }
+    return '';
   }
 }
 
@@ -365,6 +407,23 @@ class TeamDetails {
           [],
       officials:
           (json['officials'] as List<dynamic>?)
+              ?.map((e) => Official.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+  }
+
+  // Factory to create from API response data structure
+  factory TeamDetails.fromApiResponse(Map<String, dynamic> json) {
+    final data = json['data'] as Map<String, dynamic>? ?? json;
+    return TeamDetails(
+      athletes:
+          (data['athletes'] as List<dynamic>?)
+              ?.map((e) => Athlete.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      officials:
+          (data['officials'] as List<dynamic>?)
               ?.map((e) => Official.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],

@@ -119,52 +119,36 @@ class WeightDivisionsController extends GetxController {
     participants.assignAll(sorted);
   }
 
-  String getCountryFlag(String countryCode) {
-    final countryFlags = {
-      'UAE': '🇦🇪',
-      'KSA': '🇸🇦',
-      'MAR': '🇲🇦',
-      'BRN': '🇧🇭',
-      'JOR': '🇯🇴',
-      'KUW': '🇰🇼',
-      'CHA': '🇹🇩',
-      'EGY': '🇪🇬',
-      'IRQ': '🇮🇶',
-      'LBN': '🇱🇧',
-      'LBY': '🇱🇾',
-      'OMN': '🇴🇲',
-      'PSE': '🇵🇸',
-      'QAT': '🇶🇦',
-      'SYR': '🇸🇾',
-      'TUN': '🇹🇳',
-      'YEM': '🇾🇪',
-      'ALG': '🇩🇿',
-    };
-    return countryFlags[countryCode] ?? '🏳️';
+  String getCountryFlag(WeightDivisionParticipant participant) {
+    final flagEmoji = participant.getFlagEmoji();
+    if (flagEmoji.isNotEmpty) {
+      return flagEmoji;
+    }
+    return '';
   }
 
-  String getCountryName(String countryCode) {
-    final countryNames = {
-      'UAE': 'United Arab Emirates',
-      'KSA': 'Saudi Arabia',
-      'MAR': 'Morocco',
-      'BRN': 'Bahrain',
-      'JOR': 'Jordan',
-      'KUW': 'Kuwait',
-      'CHA': 'Chad',
-      'EGY': 'Egypt',
-      'IRQ': 'Iraq',
-      'LBN': 'Lebanon',
-      'LBY': 'Libya',
-      'OMN': 'Oman',
-      'PSE': 'Palestine',
-      'QAT': 'Qatar',
-      'SYR': 'Syria',
-      'TUN': 'Tunisia',
-      'YEM': 'Yemen',
-      'ALG': 'Algeria',
-    };
-    return countryNames[countryCode] ?? countryCode;
+  String getCountryName(WeightDivisionParticipant participant) {
+    final countryName = participant.getCountryName();
+    if (countryName.isNotEmpty) {
+      return countryName;
+    }
+    return '';
+  }
+
+  String getCountryCode(WeightDivisionParticipant participant) {
+    return participant.getCountryCode();
+  }
+
+  String getContinent(WeightDivisionParticipant participant) {
+    final continent = participant.getContinent();
+    if (continent.isNotEmpty) {
+      // Format continent: "ASIA" -> "Asia", "EUROPE" -> "Europe", etc.
+      if (continent.length > 1) {
+        return continent[0] + continent.substring(1).toLowerCase();
+      }
+      return continent;
+    }
+    return '';
   }
 
   String getMedalIcon(String medalType) {

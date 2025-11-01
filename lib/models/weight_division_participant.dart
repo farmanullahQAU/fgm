@@ -1,3 +1,5 @@
+import 'package:fmac/models/team.dart' show Country;
+
 class WeightDivisionParticipant {
   final String? id;
   final String participantId;
@@ -6,10 +8,11 @@ class WeightDivisionParticipant {
   final String? organizationName;
   final List<MatchHistory> matchHistory;
   final int totalWins;
-  final Map<String, dynamic>? country;
+  final Country? country;
   final int rank;
   final int seed;
   final ParticipantEvent event;
+  final String? profilePicture;
 
   WeightDivisionParticipant({
     this.id,
@@ -23,6 +26,7 @@ class WeightDivisionParticipant {
     required this.rank,
     required this.seed,
     required this.event,
+    this.profilePicture,
   });
 
   factory WeightDivisionParticipant.fromJson(Map<String, dynamic> json) {
@@ -44,10 +48,15 @@ class WeightDivisionParticipant {
               .toList() ??
           [],
       totalWins: json['totalWins'] as int? ?? 0,
-      country: json['country'] as Map<String, dynamic>?,
+      country:
+          json['country'] != null &&
+              (json['country'] as Map<String, dynamic>).isNotEmpty
+          ? Country.fromJson(json['country'] as Map<String, dynamic>)
+          : null,
       rank: json['rank'] as int? ?? 0,
       seed: json['seed'] as int? ?? 0,
       event: ParticipantEvent.fromJson(json['event'] as Map<String, dynamic>),
+      profilePicture: json['profilePicture'] as String?,
     );
   }
 
@@ -60,11 +69,44 @@ class WeightDivisionParticipant {
       if (organizationName != null) 'organizationName': organizationName,
       'matchHistory': matchHistory.map((e) => e.toJson()).toList(),
       'totalWins': totalWins,
-      if (country != null) 'country': country,
+      if (country != null) 'country': country!.toJson(),
       'rank': rank,
       'seed': seed,
       'event': event.toJson(),
+      if (profilePicture != null) 'profilePicture': profilePicture,
     };
+  }
+
+  // Helper methods to get country info
+  String getCountryCode() {
+    if (country?.code != null && country!.code!.isNotEmpty) {
+      return country!.code!;
+    }
+    if (attributes.country.isNotEmpty) {
+      return attributes.country;
+    }
+    return '';
+  }
+
+  String getCountryName() {
+    if (country?.name != null && country!.name!.isNotEmpty) {
+      return country!.name!;
+    }
+    return '';
+  }
+
+  String getContinent() {
+    if (country?.continent != null && country!.continent!.isNotEmpty) {
+      return country!.continent!;
+    }
+    return '';
+  }
+
+  String getFlagEmoji() {
+    if (country?.flagEmoji != null && country!.flagEmoji!.isNotEmpty) {
+      return country!.flagEmoji!;
+    }
+    return '';
   }
 }
 
@@ -116,36 +158,36 @@ class MatchProgression {
   final String? id;
   final ParticipantEvent event;
   final String phase;
-  final String positionReference;
+  final String? positionReference;
   final int round;
   final String number;
-  final int score;
-  final int opponentScore;
+  final int? score;
+  final int? opponentScore;
   final bool isWinner;
   final String status;
   final String scheduledStart;
   final String actualStart;
   final int mat;
-  final int penalties;
-  final int opponentPenalties;
+  final int? penalties;
+  final int? opponentPenalties;
   final String competitorPosition;
 
   MatchProgression({
     this.id,
     required this.event,
     required this.phase,
-    required this.positionReference,
+    this.positionReference,
     required this.round,
     required this.number,
-    required this.score,
-    required this.opponentScore,
+    this.score,
+    this.opponentScore,
     required this.isWinner,
     required this.status,
     required this.scheduledStart,
     required this.actualStart,
     required this.mat,
-    required this.penalties,
-    required this.opponentPenalties,
+    this.penalties,
+    this.opponentPenalties,
     required this.competitorPosition,
   });
 
@@ -154,18 +196,18 @@ class MatchProgression {
       id: json['_id'] as String?,
       event: ParticipantEvent.fromJson(json['event'] as Map<String, dynamic>),
       phase: json['phase'] as String,
-      positionReference: json['positionReference'] as String,
+      positionReference: json['positionReference'] as String?,
       round: json['round'] as int,
       number: json['number'] as String,
-      score: json['score'] as int,
-      opponentScore: json['opponentScore'] as int,
+      score: json['score'] as int?,
+      opponentScore: json['opponentScore'] as int?,
       isWinner: json['isWinner'] as bool,
       status: json['status'] as String,
       scheduledStart: json['scheduledStart'] as String,
       actualStart: json['actualStart'] as String,
       mat: json['mat'] as int,
-      penalties: json['penalties'] as int,
-      opponentPenalties: json['opponentPenalties'] as int,
+      penalties: json['penalties'] as int?,
+      opponentPenalties: json['opponentPenalties'] as int?,
       competitorPosition: json['competitorPosition'] as String,
     );
   }
@@ -175,18 +217,18 @@ class MatchProgression {
       if (id != null) '_id': id,
       'event': event.toJson(),
       'phase': phase,
-      'positionReference': positionReference,
+      if (positionReference != null) 'positionReference': positionReference,
       'round': round,
       'number': number,
-      'score': score,
-      'opponentScore': opponentScore,
+      if (score != null) 'score': score,
+      if (opponentScore != null) 'opponentScore': opponentScore,
       'isWinner': isWinner,
       'status': status,
       'scheduledStart': scheduledStart,
       'actualStart': actualStart,
       'mat': mat,
-      'penalties': penalties,
-      'opponentPenalties': opponentPenalties,
+      if (penalties != null) 'penalties': penalties,
+      if (opponentPenalties != null) 'opponentPenalties': opponentPenalties,
       'competitorPosition': competitorPosition,
     };
   }
@@ -197,7 +239,7 @@ class MatchHistory {
   final String phase;
   final String number;
   final int mat;
-  final int score;
+  final int? score;
   final bool isWinner;
   final String status;
   final String scheduledStart;
@@ -208,7 +250,7 @@ class MatchHistory {
     required this.phase,
     required this.number,
     required this.mat,
-    required this.score,
+    this.score,
     required this.isWinner,
     required this.status,
     required this.scheduledStart,
@@ -221,7 +263,7 @@ class MatchHistory {
       phase: json['phase'] as String,
       number: json['number'] as String,
       mat: json['mat'] as int,
-      score: json['score'] as int,
+      score: json['score'] as int?,
       isWinner: json['isWinner'] as bool,
       status: json['status'] as String,
       scheduledStart: json['scheduledStart'] as String,
@@ -235,7 +277,7 @@ class MatchHistory {
       'phase': phase,
       'number': number,
       'mat': mat,
-      'score': score,
+      if (score != null) 'score': score,
       'isWinner': isWinner,
       'status': status,
       'scheduledStart': scheduledStart,

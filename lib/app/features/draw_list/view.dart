@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fmac/models/draw_list.dart';
+import 'package:fmac/widgets/back_button.dart';
 import 'package:fmac/widgets/event_list_item.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -16,10 +17,7 @@ class DrawListView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Draw List'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
-        ),
+        leading: const BackButtonWidget(),
       ),
       body: RefreshIndicator(
         onRefresh: () async => controller.refresh(),

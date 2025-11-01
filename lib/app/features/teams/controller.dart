@@ -84,51 +84,36 @@ class TeamsController extends GetxController {
     await _fetchTeams();
   }
 
-  String getCountryFlag(String countryCode) {
-    // Map country codes to flag emojis
-    final countryFlags = {
-      'UAE': '🇦🇪',
-      'KSA': '🇸🇦',
-      'MAR': '🇲🇦',
-      'BRN': '🇧🇭',
-      'JOR': '🇯🇴',
-      'KUW': '🇰🇼',
-      'CHA': '🇹🇩',
-      'EGY': '🇪🇬',
-      'IRQ': '🇮🇶',
-      'LBN': '🇱🇧',
-      'LBY': '🇱🇾',
-      'OMN': '🇴🇲',
-      'PSE': '🇵🇸',
-      'QAT': '🇶🇦',
-      'SYR': '🇸🇾',
-      'TUN': '🇹🇳',
-      'YEM': '🇾🇪',
-    };
-    return countryFlags[countryCode] ?? '🏳️';
+  String getCountryFlag(Team team) {
+    // Use flag emoji from country object if available
+    final flagEmoji = team.getFlagEmoji();
+    if (flagEmoji.isNotEmpty) {
+      return flagEmoji;
+    }
+    // Return empty string if no flag data available
+    return '';
   }
 
-  String getCountryName(String countryCode) {
-    // Map country codes to full country names
-    final countryNames = {
-      'UAE': 'United Arab Emirates',
-      'KSA': 'Saudi Arabia',
-      'MAR': 'Morocco',
-      'BRN': 'Bahrain',
-      'JOR': 'Jordan',
-      'KUW': 'Kuwait',
-      'CHA': 'Chad',
-      'EGY': 'Egypt',
-      'IRQ': 'Iraq',
-      'LBN': 'Lebanon',
-      'LBY': 'Libya',
-      'OMN': 'Oman',
-      'PSE': 'Palestine',
-      'QAT': 'Qatar',
-      'SYR': 'Syria',
-      'TUN': 'Tunisia',
-      'YEM': 'Yemen',
-    };
-    return countryNames[countryCode] ?? countryCode;
+  String getCountryName(Team team) {
+    // Use country name from country object if available
+    final countryName = team.getCountryName();
+    if (countryName.isNotEmpty) {
+      return countryName;
+    }
+    // Return empty string if no country name available
+    return '';
+  }
+
+  String getContinent(Team team) {
+    // Get continent from country object if available
+    final continent = team.getContinent();
+    if (continent.isNotEmpty) {
+      // Format continent: "ASIA" -> "Asia", "EUROPE" -> "Europe", etc.
+      if (continent.length > 1) {
+        return continent[0] + continent.substring(1).toLowerCase();
+      }
+      return continent;
+    }
+    return '';
   }
 }
