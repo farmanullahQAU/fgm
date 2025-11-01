@@ -342,7 +342,7 @@ class TeamsView extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          Get.toNamed(AppRoutes.teamDetails, arguments: team.teamId);
+          Get.toNamed(AppRoutes.teamDetails, arguments: "Org-56");
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

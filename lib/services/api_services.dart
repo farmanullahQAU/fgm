@@ -70,7 +70,7 @@ class ApiError implements Exception {
 }
 
 class ApiService extends GetConnect {
-  static final String _baseUrl = 'http://192.168.18.148:5000/api';
+  static final String _baseUrl = 'http://10.77.77.162:5000/api';
   final TokenStorageService _tokenStorage = TokenStorageService();
   final Logger _logger = Logger();
   bool _isRefreshing = false;

@@ -498,10 +498,8 @@ class TeamDetailsView extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Match Progression Tags
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: _buildMatchProgressionTags(athlete),
           ),
         ],
@@ -510,72 +508,110 @@ class TeamDetailsView extends StatelessWidget {
   }
 
   List<Widget> _buildMatchProgressionTags(Athlete athlete) {
-    List<Widget> tags = [];
+    const fullRoundOrder = [
+      'R256',
+      'R128',
+      'R64',
+      'R32',
+      'R16',
+      'QF',
+      'SF',
+      'F',
+    ];
 
-    // Always show 8 boxes to match the design
-    final rounds = ['R256', 'R128', 'R64', 'R32', 'R16', 'QF', 'SF', 'F'];
-
-    for (final round in rounds) {
-      // Check if this round exists in match history
-      final matchHistory = athlete.matchHistory
-          .where((match) => match.phase == round)
-          .toList();
-
-      List<Widget> tagChildren = [];
-
-      if (matchHistory.isNotEmpty) {
-        // Show real data if available
-        final match = matchHistory.first;
-        tagChildren.add(
-          Text(
-            '${match.phase}: ${match.score ?? 0}',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              height: 1.0,
-            ),
-          ),
-        );
-
-        // Add medal icons based on actual match results
-        if (match.isWinner == true) {
-          if (match.phase == 'SF') {
-            tagChildren.add(const Text('🥉', style: TextStyle(fontSize: 9)));
-          } else if (match.phase == 'F') {
-            tagChildren.add(const Text('🥈', style: TextStyle(fontSize: 9)));
-            tagChildren.add(const Text('🥇', style: TextStyle(fontSize: 9)));
-          }
-        }
-      } else {
-        // Show empty box with dots if no data
-        tagChildren.add(
-          Text(
-            '...',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              height: 1.0,
-            ),
-          ),
-        );
-      }
-
-      tags.add(
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.shade300, width: 1),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: tagChildren),
-        ),
-      );
+    final progressionMap = <String, dynamic>{};
+    for (final p in athlete.matchProgression) {
+      final key = p.phase.toString().toUpperCase().trim() ?? '';
+      if (key.isNotEmpty) progressionMap[key] = p;
     }
 
-    return tags;
+    final boxes = fullRoundOrder.map((phase) {
+      final data = progressionMap[phase];
+      final matchNumber = (data != null && data.number != null)
+          ? data.number.toString()
+          : '--';
+
+      // ✅ Medal logic — follows WT rules exactly
+      String? medal;
+      if (phase == 'F') {
+        if (data?.isWinner == true)
+          medal = '🥇';
+        else if (data?.isWinner == false)
+          medal = '🥈';
+      } else if (phase == 'SF' && data?.isWinner == false) {
+        medal = '🥉';
+      }
+
+      final bgColor = data == null
+          ? Colors.grey.shade100
+          : (data.isWinner == true
+                ? Colors.blue.shade50
+                : Colors.grey.shade200);
+
+      return Container(
+        width: 80, // 🔹 smaller width (previously 70)
+        height: 20, // 🔹 compact height for cube-like look
+        margin: const EdgeInsets.only(right: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+        decoration: BoxDecoration(
+          // color: bgColor,
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              phase,
+              style: TextStyle(
+                fontSize: 8.5,
+                fontWeight: FontWeight.bold,
+                color: data == null ? Colors.grey.shade600 : Colors.black87,
+              ),
+            ),
+            Text(
+              " : ",
+
+              style: TextStyle(
+                fontSize: 8.5,
+                fontWeight: FontWeight.bold,
+
+                color: data == null ? Colors.grey.shade600 : Colors.black87,
+              ),
+            ),
+            Text(
+              matchNumber,
+              style: TextStyle(
+                fontSize: 8.5,
+                fontWeight: FontWeight.bold,
+
+                color: data == null ? Colors.grey.shade600 : Colors.black87,
+              ),
+            ),
+            if (medal != null)
+              Text(medal, style: const TextStyle(fontSize: 10)),
+          ],
+        ),
+      );
+    }).toList();
+
+    // 🔹 Group into rows of 4 boxes each
+    final rows = <Widget>[];
+    for (int i = 0; i < boxes.length; i += 4) {
+      rows.add(Row(children: boxes.skip(i).take(4).toList()));
+      if (i + 4 < boxes.length) rows.add(const SizedBox(height: 5));
+    }
+
+    return rows;
+  }
+
+  /// ✅ Helper to convert any `phase` type to int safely
+  int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   Widget _buildOfficialCard(Official official, ThemeData theme) {
